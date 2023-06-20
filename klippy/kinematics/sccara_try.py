@@ -42,6 +42,7 @@ class Scarakinematics:
 
     def get_steppers(self):
         #4
+        return list(self.steppers)
     def calc_position(self, stepper_positions):
         #通过各个步进电机的位置计算笛卡尔坐标系下的打印头位置；同时该方法通常只在回零和z探测时使用，因此无需过分追求效率。（正运动学）
         angle1 = stepper_positions[self.steppers[0].get_name()]
@@ -53,13 +54,33 @@ class Scarakinematics:
     
     def set_position(self, newpos, homing_axes):
         #6
+        for i, rail in enumerate(self.rails):
+            rail.set_position(newpos)
+            if i in homing_axes:
+                self.limits[i] = rail.get_range()
     def note_z_not_homed(self):
         # Helper for Safe Z Home
-        
+        self.limits[2] = (1.0, -1.0)
     def home(self, homing_state):
         #5
+        # Always home XY together
+        homing_axes = homing_state.get_axes()
+        home_xy = 0 in homing_axes or 1 in homing_axes
+        home_z = 2 in homing_axes
+        updated_axes = []
+        if home_xy:
+            updated_axes = [0, 1]
+        if home_z:
+            updated_axes.append(2)
+        homing_state.set_axes(updated_axes)
+        # Do actual homing
+        if home_xy:
+            self._home_axis(homing_state, 0, self.rails[0])
+        if home_z:
+            self._home_axis(homing_state, 2, self.rails[1])
     def _motor_off(self, print_time):
-        
+        self.limit_z = (1.0, -1.0)
+        self.limit_xy2 = -1.
     def check_move(self, move):
         #2
         limits = self.limits
@@ -75,9 +96,16 @@ class Scarakinematics:
         z_ratio = move.move_d / abs(move.axes_d[2])
         move.limit_speed(
             self.max_z_velocity * z_ratio, self.max_z_accel * z_ratio)
+        
     def get_status(self, eventtime):
         #3
-    
+        xy_home = "xy" if self.limit_xy2 >= 0. else ""
+        z_home = "z" if self.limit_z[0] <= self.limit_z[1] else ""
+        return {
+            'homed_axes': xy_home + z_home,
+            'axis_minimum': self.axes_min,
+            'axis_maximum': self.axes_max,
+        }
 
 def load_kinematics(toolhead, config):
     return Scarakinematics(toolhead, config)
