@@ -42,7 +42,7 @@ scara_stepper_angle2_calc_position(struct stepper_kinematics *sk, struct move *m
 }
 
 static void
-polar_stepper_angle_post_fixup(struct stepper_kinematics *sk)
+scara_stepper_angle_post_fixup(struct stepper_kinematics *sk)
 {
     // Normalize the stepper_bed angle
     if (sk->commanded_pos < -M_PI)
@@ -52,7 +52,7 @@ polar_stepper_angle_post_fixup(struct stepper_kinematics *sk)
 }
 
 struct stepper_kinematics * __visible
-polar_stepper_alloc(char type)
+scara_stepper_alloc(char type)
 {
     struct stepper_kinematics *sk = malloc(sizeof(*sk));
     memset(sk, 0, sizeof(*sk));
