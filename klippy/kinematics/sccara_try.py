@@ -58,9 +58,11 @@ class Scarakinematics:
             rail.set_position(newpos)
             if i in homing_axes:
                 self.limits[i] = rail.get_range()
+                
     def note_z_not_homed(self):
         # Helper for Safe Z Home
         self.limits[2] = (1.0, -1.0)
+        
     def home(self, homing_state):
         #5
         # Always home XY together
@@ -78,9 +80,11 @@ class Scarakinematics:
             self._home_axis(homing_state, 0, self.rails[0])
         if home_z:
             self._home_axis(homing_state, 2, self.rails[1])
+            
     def _motor_off(self, print_time):
         self.limit_z = (1.0, -1.0)
         self.limit_xy2 = -1.
+        
     def check_move(self, move):
         #2
         limits = self.limits
